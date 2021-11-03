@@ -2,18 +2,18 @@ import { model, Schema, Model, Document } from 'mongoose';
 import * as mongoose from 'mongoose';
 
 export interface IUser extends Document {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
+  id?: number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
 }
 
 export interface IEvent extends Document {
-  id: number;
-  type: EventType;
-  date: number; // JS-timestamp
-  title: string;
-  description: string;
+  id?: number;
+  type?: EventType;
+  date?: number; // JS-timestamp
+  title?: string;
+  description?: string;
 }
 
 export enum EventType {
@@ -23,11 +23,11 @@ export enum EventType {
 }
 
 export interface IUserBase extends IUser {
-  subscription: Array<EventType>;
+  subscription?: Array<EventType>;
 }
 
 export interface IEventBase extends IEvent {
-  subscribers: any;
+  subscribers?: any;
 }
 
 export const IUserSchema = new mongoose.Schema<IUserBase>({
@@ -35,7 +35,7 @@ export const IUserSchema = new mongoose.Schema<IUserBase>({
   lastName: { type: String, required: true },
   subscription: {
     type: [{ type: String, enum: EventType }],
-    default: Object.values(EventType),
+    default: Object.values(EventType)
   },
   email: { type: String, required: true, unique: true },
 });
@@ -54,8 +54,9 @@ export const IEventSchema = new mongoose.Schema<IEventBase>({
   subscribers: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'Event',
-    },
+      ref: 'User',
+      default: {}
+    }
   ],
 });
 
