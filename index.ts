@@ -1,13 +1,14 @@
+import {Mailer, MailResult} from "./mailer";
+
 const express = require('express');
 const mongoose = require('mongoose');
 const exphbs = require('express-handlebars');
 const path = require('path');
 const eventRoutes = require('./routes/events');
 const userRoutes = require('./routes/users');
-const axios = require('axios').default;
-const nodemailer = require('nodemailer');
 const cron = require('node-cron');
-const moment = require('moment')
+const moment = require("moment");
+const axios = require('axios').default;
 
 const PORT = 80;
 const app = express(); // переменаняя приложения
@@ -26,8 +27,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/user', userRoutes);
 app.use('/api/event', eventRoutes);
 
+
 async function start() {
-    // console.log(EventType.Webinar)
     try {
         await mongoose.connect(
             'mongodb+srv://kirill:040294@cluster0.fyzb7.mongodb.net/todos',
@@ -44,42 +45,27 @@ async function start() {
     }
 
 
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: 'kirpesok@gmail.com',
-            pass: 'avefishka9'
-        }
-    });
+    const mailer = new Mailer
+    // cron.schedule('* * * * *', async () => {
+    const {data} = await axios.get('/api/event/daily');
+    for (const event of data) {
+        for (const user of event.unnotifiedUsers) {
 
+            if (user.subscription.includes(event.type)) {
+                const result = mailer.sendNotificationMail(user.email, event.title, event.type, event.date);
 
-    cron.schedule('* * * * *', async () => {
-        const {data} = await axios.get('/api/event/daily');
-        data.forEach((event: any) => {
-            event.notifiedUsers.forEach((user: any) => {
-                if (user.subscription.includes(event.type)) {
-                    const formattedDate = (moment(event.date)).format('DD/MM/YYYY HH:mm')
-                    const mailOptions = {
-                        from: 'kirpesok@gmail.com',
-                        to: user.email,
-                        subject: `Уведомление`,
-                        text: `Напоминаем, что ${event.type} ${event.title} состоится ${formattedDate}`
-                    };
-                    transporter.sendMail(mailOptions, async function (error: any, info: any) {
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            console.log('Email sent: ' + info.response);
-                            const {data} = await axios.put(`/api/event/markNotified/${event._id}`,
-                                `userId=${user._id}`);
-
-                        }
-                    });
+                if (result == MailResult.Success) {
+                    const {data} = await axios.put(`/api/event/markNotified/${event._id}`,
+                        `userId=${user._id}`);
+                    console.log("Success: " + data)
+                } else {
+                    console.log(result)
                 }
-            })
-        })
+            }
+        }
+    }
 
-    });
+    // });
 
 }
 

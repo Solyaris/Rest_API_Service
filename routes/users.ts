@@ -1,4 +1,4 @@
-import {Request, Response} from "express";
+import {Request, Response} from 'express';
 const router = require('express').Router();
 import {EventType, User,} from '../models/Model';
 

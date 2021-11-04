@@ -1,5 +1,6 @@
 import {Event, User,} from '../models/Model';
-import { Request, Response } from 'express';
+import {Request, Response} from 'express';
+
 const router = require('express').Router();
 
 router.post('/create', async (req: Request, res: Response) => {
@@ -36,7 +37,7 @@ router.put('/markNotified/:id', async (req: Request, res: Response) => {
                 $addToSet: {notifiedUsers: {_id: req.body.userId}}
             }, function (error: any, doc: any) {
                 if (error) {
-                    throw new Error(error)
+                    Error(error)
                 }
             });
             res.status(200).json(req.body.userId)
@@ -68,29 +69,29 @@ router.put('/subscribe/:id', async (req: Request, res: Response) => {
 router.put('/delay/:id', async (req: Request, res: Response) => {
     try {
         await Event.findByIdAndUpdate(req.params.id, {
-                $set: {date: req.body.date}
+                $set: {date: req.body.date},
+                $addToSet: {unnotifiedUsers: {$each: 'notifiedUsers'}}
             }
         );
         res.status(200).json(`Event delayed to ${req.body.date}`);
 
     } catch (e: any) {
-        console.log(e)
-        res.status(404).json(e.message)
+        console.log(e);
+        res.status(404).json(e.message);
     }
-    // TODO:
-})
+});
 router.delete('/cancel/:id', async (req: Request, res: Response) => {
     try {
-        const eventId = await Event.findById(req.params.id).select("_id title")
+        const eventId = await Event.findById(req.params.id).select("_id title");
         if (!eventId) {
-            throw new Error(`Event with id:${req.params.id} does not exist`)
+            throw new Error(`Event with id:${req.params.id} does not exist`);
         } else {
-            await Event.findByIdAndRemove(req.params.id)
+            await Event.findByIdAndRemove(req.params.id);
             res.status(200).json(`Event with id:${req.params.id} has been removed successfully`);
         }
     } catch (e: any) {
-        res.status(404).json(e.message)
+        res.status(404).json(e.message);
     }
-})
+});
 
 module.exports = router;
