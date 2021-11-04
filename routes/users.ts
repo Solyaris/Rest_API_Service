@@ -1,16 +1,20 @@
 const router = require('express').Router();
-import {
-    IEvent,
-    IUser,
-    EventType,
-    User,
-    Event,
-    IUserBase,
-} from '../models/Model';
+import {EventType, IUserBase, User,} from '../models/Model';
+
+router.get('/:id', async (req: any, res: any) => {
+    try {
+        const user = await User.findById(req.params.id)
+        res.status(200).json(user)
+    } catch (e: any) {
+        res.status(500).json(e.message)
+    }
+
+});
+
 
 router.post('/create', async (req: any, res: any) => {
     try {
-        const newUser: IUserBase = await User.create({
+        const newUser = await User.create({
             email: req.body.email,
             firstName: req.body.firstName,
             lastName: req.body.lastName,

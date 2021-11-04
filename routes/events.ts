@@ -1,10 +1,11 @@
-const router = require('express').Router();
-import {Event, IEvent, User,} from '../models/Model';
+import * as Mongoose from "mongoose";
+import {Event, User,} from '../models/Model';
 
+const router = require('express').Router();
 
 router.post('/create', async (req: any, res: any) => {
     try {
-        const newEvent: IEvent = await Event.create({
+        const newEvent = await Event.create({
             type: req.body.type,
             date: req.body.date,
             title: req.body.title,
@@ -16,14 +17,45 @@ router.post('/create', async (req: any, res: any) => {
         res.status(500).json(e.message);
     }
 });
+router.get('/daily', async (req: any, res: any) => {
+    try {
+        const events =
+            await Event.find({date: {$lte: (Date.now() + 86400000)}})
+                .populate('unnotifiedUsers');
+        res.status(200).json(events)
+    } catch (e: any) {
+        res.status(500).json(e.message);
+    }
+
+});
+
+
+router.put('/markNotified/:id', async (req: any, res: any) => {
+        try {
+            Event.findByIdAndUpdate(req.params.id, {
+                $pull: {unnotifiedUsers: req.body.userId},
+                $addToSet: {notifiedUsers: {_id: req.body.userId}}
+            }, function (error: any, doc: any) {
+                if (error) {
+                    throw new Error(error)
+                }
+            });
+            res.status(200).json(req.body.userId)
+
+        } catch
+            (e: any) {
+            res.status(500).json(e.message);
+        }
+    }
+)
 
 router.put('/subscribe/:id', async (req: any, res: any) => {
     try {
         await User.findById(req.body.userId);
         try {
-            await Event.findByIdAndUpdate(req.params.id,//fixme добавить проверку существующей подписки
+            await Event.findByIdAndUpdate(req.params.id,// FIXME: добавить проверку существующей подписки
                 {
-                    $addToSet: {subscribers: req.body.userId},
+                    $addToSet: {unnotifiedUsers: req.body.userId},
                 });
             res.status(200).json(`User with id:${req.body.userId} subscribed successfully to event ${req.params.id}`);
         } catch (e: any) {//TODO
@@ -48,7 +80,7 @@ router.put('/delay/:id', async (req: any, res: any) => {
         res.status(404).json(e.message)
     }
 })
-router.delete('/cancel/:id', async (req: any, res: any, next: any) => {
+router.delete('/cancel/:id', async (req: any, res: any) => {
     try {
         const eventId = await Event.findById(req.params.id).select("_id title")
         if (!eventId) {

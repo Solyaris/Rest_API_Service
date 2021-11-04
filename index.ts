@@ -1,13 +1,17 @@
-import {IEvent, IUser, EventType, User, Event} from './models/Model';
+import {EventType} from "./models/Model";
 
-const express = require('express')
+const express = require('express');
 const mongoose = require('mongoose');
 const exphbs = require('express-handlebars');
 const path = require('path');
 const eventRoutes = require('./routes/events');
 const userRoutes = require('./routes/users');
+const axios = require('axios').default;
+const nodemailer = require('nodemailer');
+const cron = require('node-cron');
+const moment = require('moment')
 
-const PORT = 3000;
+const PORT = 80;
 const app = express(); // переменаняя приложения
 const hbs = exphbs.create({
     defaultLayout: 'main',
@@ -40,12 +44,45 @@ async function start() {
     } catch (e) {
         console.log(e);
     }
-    // const event: IEvent = await Event.create({
-    //     type: EventType.Webinar,
-    //     date: Date.now(),
-    //     title: "Ewkere",
-    //     description: "Let's celebrate!"
-    // })
+
+
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'kirpesok@gmail.com',
+            pass: 'avefishka9'
+        }
+    });
+
+
+    cron.schedule('* * * * *', async () => {
+        const {data} = await axios.get('/api/event/daily');
+        data.forEach((event: any) => {
+            event.notifiedUsers.forEach((user: any) => {
+                if (user.subscription.includes(event.type)) {
+                    const formattedDate = (moment(event.date)).format('DD/MM/YYYY HH:mm')
+                    const mailOptions = {
+                        from: 'kirpesok@gmail.com',
+                        to: user.email,
+                        subject: `Уведомление`,
+                        text: `Напоминаем, что ${event.type} ${event.title} состоится ${formattedDate}`
+                    };
+                    transporter.sendMail(mailOptions, async function (error: any, info: any) {
+                        if (error) {
+                            console.log(error);
+                        } else {
+                            console.log('Email sent: ' + info.response);
+                            const {data} = await axios.put(`/api/event/markNotified/${event._id}`,
+                                `userId=${user._id}`);
+
+                        }
+                    });
+                }
+            })
+        })
+
+    });
+
 }
 
 start();
