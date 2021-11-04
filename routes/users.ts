@@ -1,7 +1,8 @@
+import {Request, Response} from "express";
 const router = require('express').Router();
-import {EventType, IUserBase, User,} from '../models/Model';
+import {EventType, User,} from '../models/Model';
 
-router.get('/:id', async (req: any, res: any) => {
+router.get('/:id', async (req: Request, res: Response) => {
     try {
         const user = await User.findById(req.params.id)
         res.status(200).json(user)
@@ -12,7 +13,7 @@ router.get('/:id', async (req: any, res: any) => {
 });
 
 
-router.post('/create', async (req: any, res: any) => {
+router.post('/create', async (req: Request, res: Response) => {
     try {
         const newUser = await User.create({
             email: req.body.email,
@@ -27,7 +28,7 @@ router.post('/create', async (req: any, res: any) => {
     }
 });
 
-router.put('/:id', async (req: any, res: any) => {
+router.put('/:id', async (req: Request, res: Response) => {
     try {
         const subscription: Array<String> = Array.isArray(req.body.subscription)
             ? req.body.subscription

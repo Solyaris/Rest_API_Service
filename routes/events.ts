@@ -1,9 +1,8 @@
-import * as Mongoose from "mongoose";
 import {Event, User,} from '../models/Model';
-
+import { Request, Response } from 'express';
 const router = require('express').Router();
 
-router.post('/create', async (req: any, res: any) => {
+router.post('/create', async (req: Request, res: Response) => {
     try {
         const newEvent = await Event.create({
             type: req.body.type,
@@ -17,7 +16,7 @@ router.post('/create', async (req: any, res: any) => {
         res.status(500).json(e.message);
     }
 });
-router.get('/daily', async (req: any, res: any) => {
+router.get('/daily', async (req: Request, res: Response) => {
     try {
         const events =
             await Event.find({date: {$lte: (Date.now() + 86400000)}})
@@ -30,7 +29,7 @@ router.get('/daily', async (req: any, res: any) => {
 });
 
 
-router.put('/markNotified/:id', async (req: any, res: any) => {
+router.put('/markNotified/:id', async (req: Request, res: Response) => {
         try {
             Event.findByIdAndUpdate(req.params.id, {
                 $pull: {unnotifiedUsers: req.body.userId},
@@ -48,8 +47,7 @@ router.put('/markNotified/:id', async (req: any, res: any) => {
         }
     }
 )
-
-router.put('/subscribe/:id', async (req: any, res: any) => {
+router.put('/subscribe/:id', async (req: Request, res: Response) => {
     try {
         await User.findById(req.body.userId);
         try {
@@ -67,7 +65,7 @@ router.put('/subscribe/:id', async (req: any, res: any) => {
 
 });
 
-router.put('/delay/:id', async (req: any, res: any) => {
+router.put('/delay/:id', async (req: Request, res: Response) => {
     try {
         await Event.findByIdAndUpdate(req.params.id, {
                 $set: {date: req.body.date}
@@ -79,8 +77,9 @@ router.put('/delay/:id', async (req: any, res: any) => {
         console.log(e)
         res.status(404).json(e.message)
     }
+    // TODO:
 })
-router.delete('/cancel/:id', async (req: any, res: any) => {
+router.delete('/cancel/:id', async (req: Request, res: Response) => {
     try {
         const eventId = await Event.findById(req.params.id).select("_id title")
         if (!eventId) {
