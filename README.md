@@ -1,5 +1,5 @@
 # Test
-Create .env file in root and fill with:
+Edit .env file in root:
 MAIL_SERVICE='gmail'
 MAIL_USER=mail@example.com
 MAIL_PASS=pass

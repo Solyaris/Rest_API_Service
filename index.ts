@@ -46,27 +46,27 @@ async function start() {
 
 
     const mailer = new Mailer
-    // cron.schedule('* * * * *', async () => {
-    const {data} = await axios.get('/api/event/daily');
-    for (const event of data) {
-        for (const user of event.unnotifiedUsers) {
+    cron.schedule('30 * * * *', async () => { // Runs notifications every 30 minutes
+        const {data} = await axios.get('/api/event/daily');
+        for (const event of data) {
+            for (const user of event.unnotifiedUsers) {
 
-            if (user.subscription.includes(event.type)) {
-                const result = mailer.sendNotificationMail(user.email, event.title, event.type, event.date);
+                if (user.subscription.includes(event.type)) {
+                    const result = mailer.sendNotificationMail(user.email, event.title, event.type, event.date);
 
-                if (result == MailResult.Success) {
-                    const {data} = await axios.put(`/api/event/markNotified/${event._id}`,
-                        `userId=${user._id}`);
-                    console.log("Success: " + data)
-                } else {
-                    console.log(result)
+                    if (result == MailResult.Success) {
+                        const {data} = await axios.put(`/api/event/markNotified/${event._id}`,
+                            `userId=${user._id}`);
+                        console.log("Success: " + data)
+                    } else {
+                        console.log(result)
+                    }
                 }
             }
         }
+
+         });
+
     }
 
-    // });
-
-}
-
-start();
+    start();

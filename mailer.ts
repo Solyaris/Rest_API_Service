@@ -22,18 +22,6 @@ export enum MailResult {
 
 export class Mailer implements IMailer {
 
-    // private readonly smtpConfig = {
-    //     host: 'smtp.gmail.com',
-    //     port: 80,
-    //     secure: false, // use SSL
-    //     auth: {
-    //         user: process.env.MAIL_USER,
-    //         pass: process.env.MAIL_PASS
-    //     }
-    //
-    // };
-    // private readonly transporter = nodemailer.createTransport(this.smtpConfig);
-
     private readonly transporter = nodemailer.createTransport({
         service: process.env.MAIL_SERVICE,
         auth: {
@@ -41,13 +29,6 @@ export class Mailer implements IMailer {
             pass: process.env.MAIL_PASS
         }
     });
-    // private readonly transporter = nodemailer.createTransport({
-    //     service: 'gmail',
-    //     auth: {
-    //         user:' kirpesok@gmail.com',
-    //         pass: 'avefishka9'
-    //     }
-    // });
 
     sendCancelMail(mailTo: String, eventTitle: String, eventType: String): String {
         const mailOptions = {
@@ -81,7 +62,7 @@ export class Mailer implements IMailer {
                     return MailResult.Success;
                 }
             });
-        }catch (e: any) {
+        } catch (e: any) {
             console.log(e.message)
         }
         return MailResult.Success;
